@@ -1,0 +1,35 @@
+# depslib dependency file v1.0
+1603595121 source:c:\users\ezequ\dropbox\uns\organizacion de computadoras\orga 2020\poryecto\evaluador\lista.c
+	"lista.h"
+	<stdio.h>
+	<stdlib.h>
+
+1601588274 c:\users\ezequ\dropbox\uns\organizacion de computadoras\orga 2020\poryecto\evaluador\lista.h
+
+1603736843 source:c:\users\ezequ\dropbox\uns\organizacion de computadoras\orga 2020\poryecto\evaluador\mapeo.c
+	<stdio.h>
+	<stdlib.h>
+	"lista.h"
+	"mapeo.h"
+
+1603597183 c:\users\ezequ\dropbox\uns\organizacion de computadoras\orga 2020\poryecto\evaluador\mapeo.h
+	"lista.h"
+
+1603731099 source:c:\users\ezequ\dropbox\uns\organizacion de computadoras\orga 2020\poryecto\evaluador\evaluador.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"lista.h"
+	"mapeo.h"
+
+1603595121 c:\users\ezequ\dropbox\uns\organizacion de computadoras\orga 2020\poryecto\evaluador\lista.c
+	"lista.h"
+	<stdio.h>
+	<stdlib.h>
+
+1603594849 c:\users\ezequ\dropbox\uns\organizacion de computadoras\orga 2020\poryecto\evaluador\mapeo.c
+	"mapeo.h"
+	<stdio.h>
+	<stdlib.h>
+	"lista.h"
+
