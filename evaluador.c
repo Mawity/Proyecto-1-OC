@@ -21,7 +21,7 @@ int main(int argc, char *argv[]){
   FILE *archivo;
   if((archivo = fopen(nombre_archivo,"r")) == NULL){
     printf("%s\n","archivo invalido");
-    return 0;
+    return -1;
   } else {
         if(feof(archivo))
           printf("%s\n","Archivo vacío");

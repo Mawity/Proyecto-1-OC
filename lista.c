@@ -1,6 +1,7 @@
 #include "lista.h"
 #include <stdio.h>
 #include <stdlib.h>
+
 void crear_lista(tLista* l){
     ///Asigno memoria.
     *l=(tLista) malloc(sizeof(struct celda));
@@ -10,7 +11,6 @@ void crear_lista(tLista* l){
 
     (*l) -> elemento=NULL; ///elemento nulo.
     (*l) -> siguiente=NULL; ///el puntero al sig elemento es nulo.
-
 }
 
 void l_insertar(tLista l, tPosicion p, tElemento e)

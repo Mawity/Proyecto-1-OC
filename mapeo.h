@@ -28,11 +28,11 @@ typedef struct mapeo * tMapeo;
 // ---------------------------------------------------------------------------------------------
 // Definicion de prototipos y documentacion de las funciones.
 // Obs.: la tabla hash debe mantener control del factor de carga en todo momento.
-// Obs.: el factor de carga m�ximo permitido equivale al 75% de la longitud de la tabla.
+// Obs.: el factor de carga moximo permitido equivale al 75% de la longitud de la tabla.
 // ---------------------------------------------------------------------------------------------
 
 /**
- Inicializa un mapeo vac�o, con capacidad inicial igual al MAX(10, CI).
+ Inicializa un mapeo vacio, con capacidad inicial igual al MAX(10, CI).
  Una referencia al mapeo creado es referenciada en *M.
  A todo efecto, el valor hash para las claves sera computado mediante la funcion fHash.
  A todo efecto, la comparacion de claves se realizara mediante la funcion fComparacion.
@@ -43,7 +43,7 @@ extern void crear_mapeo(tMapeo * m, int ci, int (*fHash)(void *), int (*fCompara
 /**
  Inserta una entrada con clave C y valor V, en M.
  Si una entrada con clave C y valor Vi ya existe en M, modifica Vi por V.
- Retorna NULL si la clave C no existia en M, o Vi en caso contrario.
+ Retorna NULL si la clave C no exist�a en M, o Vi en caso contrario.
  Finaliza indicando MAP_ERROR_MEMORIA si no es posible reservar memoria correspondientemente.
 **/
 extern tValor m_insertar(tMapeo m, tClave c, tValor v);
