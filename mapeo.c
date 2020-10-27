@@ -10,13 +10,11 @@
 // HASH ABIERTO: consiste en tener en cada pos de la tabla una lista de los elementos que
 //  de acuerdo a la funcion de hash, correspondan a dicha posicion.
 
-//interfaces de funciones globales
+//Modularizo las interfaces para que no quede la implementacion primero
+void reHash(tMapeo m);
 void (*fEliminarClave)(void *);
 void (*fEliminarValor)(void *);
 void fEliminarEntrada(tElemento e);
-
-//interfaz de reHash
-void reHash(tMapeo m);
 
 //factor de carga
 const float FC = 0.75;
@@ -30,18 +28,18 @@ void crear_mapeo(tMapeo * m, int ci, int (*fHash)(void *), int (*fComparacion)(v
 
     if (*m == NULL){
         exit (MAP_ERROR_MEMORIA);
+    }else{
+        tLista * lista = (tLista*) malloc(sizeof(tLista) * cantInicial);
+        //Inicializacion de las listas en cada bucket de la tabla
+        for (int i=0; i < cantInicial; i++){
+            crear_lista(&lista[i]);
+        }
+        (*m)->longitud_tabla = cantInicial;
+        (*m)->cantidad_elementos = 0;
+        (*m)->tabla_hash = lista;
+        (*m)->hash_code = fHash;
+        (*m)->comparador = fComparacion;
     }
-    tLista * lista = (tLista*) malloc(sizeof(tLista) * cantInicial);
-    //Inicializacion de las listas en cada bucket de la tabla
-    for (int i=0; i < cantInicial; i++){
-        crear_lista(&lista[i]);
-    }
-
-    (*m)->longitud_tabla = cantInicial;
-    (*m)->cantidad_elementos = 0;
-    (*m)->tabla_hash = lista;
-    (*m)->hash_code = fHash;
-    (*m)->comparador = fComparacion;
 }
 
 /**
@@ -151,22 +149,25 @@ void m_destruir(tMapeo * m, void (*fEliminarC)(void *), void (*fEliminarV)(void 
      Retorna el valor correspondiente, o NULL en caso contrario.
 **/
 tValor m_recuperar(tMapeo m, tClave c){
-    tLista l = m->tabla_hash[m->hash_code(c) % m->longitud_tabla]; //directamente calculo el lugar y hago la lista
+    int bucket = m->hash_code(c) % m->longitud_tabla;
+    tLista l = m->tabla_hash[bucket]; //directamente calculo el lugar y hago la lista
     tValor recuperar = NULL;
-    int encontre = 0; //bool
     tPosicion posA, posF;
     tEntrada entrada;
-    posA = l_primera(l);
-    posF = l_fin(l);
 
-    while(posA!=posF && !encontre){ //Se recorre la lista correspondiente al bucket.
-        entrada = (tEntrada) l_recuperar(l, posA);
-        if (m->comparador(c, entrada->clave) == 0){ //Las claves son iguales, lo encontro!
-            recuperar = entrada->valor;
-            encontre = 1;
+    if(l_longitud(m->tabla_hash[bucket] != 0)){
+        posA = l_primera(l);
+        posF = l_fin(l);
+        int encontre = 0; //bool
+        while(posA!=posF && !encontre){ //Se recorre la lista correspondiente al bucket.
+            entrada = (tEntrada) l_recuperar(l, posA);
+            if (m->comparador(c, entrada->clave) == 0){ //Las claves son iguales, lo encontro!
+                recuperar = entrada->valor;
+                encontre = 1;
+            }
+            else
+                posA = l_siguiente(l, posA);
         }
-        else
-            posA = l_siguiente(l, posA);
     }
 
     return recuperar;
@@ -197,9 +198,9 @@ void reHash(tMapeo m){
         crear_lista(lista[i]);
 	}
 
-    for(int i = 0; i<m->longitud_tabla;i++){//Recorro las tablas del mapeo original
-        posA = l_primera(m->tabla_hash[i]);//primer posicion de la lista ubicada en lista[i]
-        posF = l_fin(m->tabla_hash[i]);//ultima posicion de la lista ubicada en lista[i]
+    for(int i = 0; i<m->longitud_tabla;i++){ // recorro los bucket a copiar
+        posA = l_primera(m->tabla_hash[i]);
+        posF = l_fin(m->tabla_hash[i]);
 
         //vuelve a llenar cada lista en la nueva tabla
         while (posA != posF) {
