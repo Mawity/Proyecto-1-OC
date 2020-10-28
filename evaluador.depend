@@ -6,7 +6,7 @@
 
 1601588274 c:\users\ezequ\dropbox\uns\organizacion de computadoras\orga 2020\poryecto\evaluador\lista.h
 
-1603737766 source:c:\users\ezequ\dropbox\uns\organizacion de computadoras\orga 2020\poryecto\evaluador\mapeo.c
+1603855568 source:c:\users\ezequ\dropbox\uns\organizacion de computadoras\orga 2020\poryecto\evaluador\mapeo.c
 	<stdio.h>
 	<stdlib.h>
 	"lista.h"
@@ -15,11 +15,10 @@
 1603597183 c:\users\ezequ\dropbox\uns\organizacion de computadoras\orga 2020\poryecto\evaluador\mapeo.h
 	"lista.h"
 
-1603738731 source:c:\users\ezequ\dropbox\uns\organizacion de computadoras\orga 2020\poryecto\evaluador\evaluador.c
+1603855183 source:c:\users\ezequ\dropbox\uns\organizacion de computadoras\orga 2020\poryecto\evaluador\evaluador.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
-	"lista.h"
 	"mapeo.h"
 
 1603595121 c:\users\ezequ\dropbox\uns\organizacion de computadoras\orga 2020\poryecto\evaluador\lista.c

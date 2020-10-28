@@ -155,7 +155,8 @@ tValor m_recuperar(tMapeo m, tClave c){
     tPosicion posA, posF;
     tEntrada entrada;
 
-    if(l_longitud(m->tabla_hash[bucket] != 0)){
+    if(l_longitud(l) != 0){
+        //principio y fin de cada bucket
         posA = l_primera(l);
         posF = l_fin(l);
         int encontre = 0; //bool
@@ -187,30 +188,35 @@ tValor m_recuperar(tMapeo m, tClave c){
 **/
 void reHash(tMapeo m){
     tEntrada entrada;
-    m->cantidad_elementos = 0;
     tPosicion posA,posF; //se inicializan luego
+    int viejaLong = m->longitud_tabla;
     int nuevaLong = 2 * m->longitud_tabla; //duplica el tamaño de la tabla
-	tLista *lista[nuevaLong];
-    (*lista) = malloc(sizeof(tLista) * nuevaLong);
+    tLista *lista = malloc(sizeof(tLista) * nuevaLong);
 
     //crea todos los nuevos buckets
 	for (int i=0; i < nuevaLong; i++){
-        crear_lista(lista[i]);
+        crear_lista(lista + i);
 	}
 
-    for(int i = 0; i<m->longitud_tabla;i++){ // recorro los bucket a copiar
-        posA = l_primera(m->tabla_hash[i]);
-        posF = l_fin(m->tabla_hash[i]);
+    for(int i = 0; i<viejaLong;i++){ // recorro los bucket a copiar
+        // primera y ultima pos del bucket
+        tLista bucket = m->tabla_hash[i];
+        posA = l_primera(bucket);
+        posF = l_fin(bucket);
 
-        //vuelve a llenar cada lista en la nueva tabla
+        // vuelve a llenar cada lista en la nueva tabla
         while (posA != posF) {
             entrada = (tEntrada) l_recuperar(m->tabla_hash[i],posA);
-            m_insertar(m,entrada->clave, entrada->valor);
-            posA = l_siguiente(m->tabla_hash[i], posA);
+            int bucketActual = m->hash_code(entrada->clave) % m->longitud_tabla;
+            l_insertar(lista[bucketActual], l_fin(*lista), entrada);
+            posA = l_siguiente(*lista, posA);
         }
+        bucket->siguiente = NULL;
+        bucket->elemento = NULL;
+        bucket = NULL;
+        free(bucket);
     }
     //actualizo valores
-    (m)->longitud_tabla = nuevaLong;
     (m)->tabla_hash = lista;
 }
 
