@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "lista.h"
+#include "lista.c"
 #include "mapeo.h"
 
 #define max(a,b)    (((a) > (b)) ? (a) : (b))
@@ -19,7 +19,6 @@ void fEliminarEntrada(tElemento e);
 //factor de carga
 const float FC = 0.75;
 
-tLista map[10];
 
 void crear_mapeo(tMapeo * m, int ci, int (*fHash)(void *), int (*fComparacion)(void *, void *)){
 
@@ -55,29 +54,29 @@ tValor m_insertar(tMapeo m, tClave c, tValor v){
     }else{
         tLista l;
         tPosicion posA, posF;
-        tEntrada entry,nueva;
+        tEntrada entrada,nueva;
         tValor vi = NULL;
         int encontre = 0; //bool
         int bucket = m->hash_code(c) % m->longitud_tabla; //valor de la clave C
 
-        l = (tLista) m->tabla_hash + bucket;
+        l = *(m->tabla_hash+bucket);
         posA = l_primera(l);
         posF = l_fin(l);
 
         //Recorre el bucket para encontrar la palabra repetida
         while (posA != posF && !encontre) {
-            entry = (tEntrada) l_recuperar(l,posA);
-            tClave *clave = entry->clave;
+            entrada = (tEntrada) l_recuperar(l,posA);
+            tClave *clave = entrada->clave;
             if(m->comparador(clave,c) != 0){
                 encontre = 1; //La encontro!
-                vi = (tValor) entry->valor; //valor a retornar
-                entry->valor = v; //Modifica el valor de la entrada
+                vi = (tValor) entrada->valor; //valor a retornar
+                entrada->valor = v; //Modifica el valor de la entrada
             }else{
                 posA = l_siguiente(l,posA); //sigue buscando
             }
         }
-        if(!encontre){
-            if(m->cantidad_elementos +1 / m->longitud_tabla > FC){ //factor de carga superado
+        if(!encontre){ //agregar al mapeo nueva entrada
+            if(((m->cantidad_elementos +1) / (m->longitud_tabla)) >= FC){ //factor de carga superado
                 reHash(m);
             }
             //Como la entrada no existe se crea un lugar para ella y se inserta
@@ -85,6 +84,7 @@ tValor m_insertar(tMapeo m, tClave c, tValor v){
             nueva->clave = c;
             nueva->valor = v;
             l_insertar(l,posA,nueva);
+            m->cantidad_elementos++;
         }
         return vi;
     }

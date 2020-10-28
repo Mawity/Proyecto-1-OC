@@ -1,6 +1,6 @@
-#include "lista.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "lista.h"
 
 void crear_lista(tLista* l){
     ///Asigno memoria.
@@ -15,6 +15,9 @@ void crear_lista(tLista* l){
 
 void l_insertar(tLista l, tPosicion p, tElemento e)
 {
+    if(l==NULL || p==NULL){
+        exit(LST_POSICION_INVALIDA);
+    }
     ///Asigno memoria.
     tPosicion nuevaCelda=(tPosicion) malloc(sizeof(struct celda));
     ///Si la memoria no se asigno produce un error.

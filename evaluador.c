@@ -1,61 +1,68 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "mapeo.h"
+#include <ctype.h>
+#include "mapeo.c"
 
 #define OPEN_FILE_ERROR -1
 #define PROG_INIT_ERROR -2
 
 int fHash(void *p);
 int fComparacion(void *e1, void *e2);
-void leer_palabra(char *palabra, FILE *archivo);
 
 int main(int argc, char *argv[]){
-    tMapeo mapeo;
-    if(argc == 2){
-        char *nombre_archivo[20];
-        *nombre_archivo = argv[1];
+tMapeo mapeo;
+  if(argc == 2){
+	char *nombre_archivo[20];
+	*nombre_archivo = argv[1];
+	printf("%s\n","Creando mapeo...");
+    crear_mapeo(&mapeo,99,&fHash,&fComparacion);
 
-        printf("%s\n","Creando mapeo...");
+    // Abro el archivo a leer
+    FILE *archivo;
+    if((archivo = fopen(*nombre_archivo,"r")) == NULL){
+		printf("%s\n","Archivo invalido");
+		return -1;
 
-        crear_mapeo(&mapeo,9,&fHash,&fComparacion);
+    } else {
+        if(feof(archivo))
+          printf("%s\n","Archivo vacio");
+        else {//mapeo las palabras
+            printf("Entre a mapear \n");
+            tValor cant;
+            //char word[50];
+            char *word;
+            word = (char *) malloc(50*sizeof(char));
 
-        // Abro el archivo a leer
-        FILE *archivo;
-        if((archivo = fopen(nombre_archivo,"r")) == NULL){
-            printf("%s\n","Archivo invalido");
-            return -1;
-        } else {
-            if(feof(archivo))
-                printf("%s\n","Archivo vacio");
-            else {
-                tValor cant;
-                char *palabra = (char*) malloc(30*sizeof(char));
-                while(!feof(archivo)){
-                    leer_palabra(palabra,archivo);
-                    cant = m_recuperar(mapeo,palabra);
-
-                    if(m_recuperar(mapeo, palabra) != NULL){
-                        cant++;
-                        m_insertar(mapeo,palabra,cant);
-                    } else { //si la palabra no estaba en el mapeo
-                        m_insertar(mapeo,palabra,(tValor) 1);
-                    }
-                    rewind(archivo);
+            while (fscanf(archivo, "%s", word) != EOF){
+                cant = m_recuperar(mapeo,word);
+                if(m_recuperar(mapeo, word) != NULL){
+                    cant++;
+                    m_insertar(mapeo,word,cant);
+                    //printf("sume a cantidad \n");
+                } else { //Si aun no se mapeo esa palabra
+                    m_insertar(mapeo,word,(tValor) 1);
+                    //printf("inserte nueva palabra \n");
                 }
+            //rewind(archivo);
             }
-          }
+        }
+      }
     } else
         printf("%s\n","Error en el numero de argumentos");
 
-    int op,seguir;
+    //printf("%s\n","Creando mapeo...");
+    //crear_mapeo(&mapeo,9,&fHash,&fComparacion);
+
+    int op;
+    int seguir = 1;
     char word[15];
     while(seguir){
         printf("%s\n\n\n","---------------------Menu de opciones--------------------");
         printf("%s\n\n","1. Cantidad de apariciones\n2. Salir");
         scanf("%d",&op);
         fflush(stdin);
-        //OPCIONES DE USUARIO
+
         switch(op){
           case 1: {
             printf("%s","---> Ingrese a una palabra: ");
@@ -63,32 +70,24 @@ int main(int argc, char *argv[]){
             printf("\n");
             fflush(stdin);
             tValor cant = m_recuperar(mapeo,word);
-            printf("*** La cantidad de veces que aparece la palabra es: %d", cant);//warning por falta de casteo de int a tValor
+            printf("*** La cantidad de veces que aparece la palabra es: %p",cant);
+
             break;
           }
           case 2:
             printf("%s\n","---> Ha finalizado la ejecucion del programa");
             seguir = 0;
         }
-    }
+      }
+
     return 0;
 }
 
-void leer_palabra(char *palabra, FILE *archivo){
-    int i = 0;
-    char caract = 0;
-    while((caract = fgetc(archivo)) != EOF){
-        if(caract != '\n' && caract != ' '){
-        palabra[i++] = caract;
-        }
-    }
-}
-
 int fHash(void *p){
-    return ((int)strlen(p));
+   return ((int)strlen(p));
 }
 
 int fComparacion(void *e1, void *e2){
-    return (strcmp(e1,e2));
-    return (strcmp(e1,e2)==0);
+   return (strcmp(e1,e2));
+   return (strcmp(e1,e2)==0);
 }
