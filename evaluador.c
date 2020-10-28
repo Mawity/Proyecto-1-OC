@@ -7,22 +7,22 @@
 #define OPEN_FILE_ERROR -1
 #define PROG_INIT_ERROR -2
 
+// Interfaz de funciones
 int fHash(void *p);
 int fComparacion(void *e1, void *e2);
-void readWord(char *w[]);
-
-
+void fEliminarC(char *clave);
+void fEliminarV(int *valor);
+void sacarPunto(char word[]);
 
 int main(int argc, char *argv[]){
 tMapeo mapeo;
+FILE *archivo;
   if(argc == 2){
 	char *nombre_archivo[20];
 	*nombre_archivo = argv[1];
-	printf("%s\n","Creando mapeo...");
     crear_mapeo(&mapeo,99,&fHash,&fComparacion);
 
     // Abro el archivo a leer
-    FILE *archivo;
     if((archivo = fopen(*nombre_archivo,"r")) == NULL){
 		printf("%s\n","Archivo invalido");
 		return -1;
@@ -31,19 +31,22 @@ tMapeo mapeo;
         if(feof(archivo))
           printf("%s\n","Archivo vacio");
         else {//mapeo las palabras
-            //printf("Entre a mapear \n");
             tValor cantWord;
             char *word;
             word = (char *) malloc(50*sizeof(char));
 
             while (fscanf(archivo, "%s", word) != EOF){
-                //printf("%s\n",word); //las lee perfecto
+                //sacarle el punto a la palabra
+                sacarPunto(word);
+
+                //printf("%s\n",word); //DEBUG
                 cantWord = m_recuperar(mapeo,word);
-                printf("%d",(tValor)cantWord);
+                //printf("%p\n",(tValor)cantWord); //DEBUG
                 if((cantWord) != NULL){
                     cantWord++;
-                    m_insertar(mapeo,word,cantWord); //no actualiza el valor de cantWord
-                } else { //Si aun no se mapeo esa palabra
+                    m_eliminar(mapeo,word,(void*)&fEliminarC, (void*)&fEliminarV);
+                    m_insertar(mapeo,word,cantWord);
+                } else {
                     m_insertar(mapeo,word,(tValor) 1);
                 }
             //rewind(archivo);
@@ -53,9 +56,8 @@ tMapeo mapeo;
     } else
         printf("%s\n","Error en el numero de argumentos");
 
-    //printf("%s\n","Creando mapeo...");
-    //crear_mapeo(&mapeo,9,&fHash,&fComparacion);
 
+    // MENU DEL EVALUADOR
     int op;
     int seguir = 1;
     char word[15];
@@ -72,12 +74,13 @@ tMapeo mapeo;
             printf("\n");
             fflush(stdin);
             tValor cant = m_recuperar(mapeo,word);
-            printf("*** La cantidad de veces que aparece la palabra es: %p",cant);
-
+            printf("*** La cantidad de veces que aparece la palabra es: %p\n\n\n",cant);
             break;
           }
           case 2:
             printf("%s\n","---> Ha finalizado la ejecucion del programa");
+            m_destruir(&mapeo, (void*) &fEliminarC, (void*) &fEliminarV);
+            fclose(archivo);
             seguir = 0;
         }
       }
@@ -91,8 +94,27 @@ tMapeo mapeo;
     ###############################################
 */
 
+void sacarPunto(char word[]){
+    char letra;
+    for(int i=0; i<strlen(word);i++){
+        letra = word[i];
+        if(letra == '.'){
+            word[i]='\0';
+        }
+    }
+    //printf("Palabra sin el punto:%s\n",word);
+}
+
 int fHash(void *p){
-   return ((int)strlen(p));
+    char* word = p;
+    int hash = 0;
+    int i=0;
+    while(i<strlen(word)){
+        hash = 31 * hash + word[i];
+        i++;
+    }
+
+    return abs(hash);
 }
 
 int fComparacion(void *e1, void *e2){
@@ -100,17 +122,12 @@ int fComparacion(void *e1, void *e2){
    return (strcmp(e1,e2)==0);
 }
 
-/*
-void readWord(char *w[]){
-    char c;
-	int i=0;
-	while((c = fgetc(archivo)) != EOF) {
-		if(c == ' ' || c == '\n') {
-			w[i]=c;
-		}
-		i++;
-		//cada ves que lee una palabra termina recorriendo todo el archivo
-		//el orden del metodo se podria acotar por el tamaño de la palabra
-	}
+void fEliminarC(char *clave) {
+    clave = NULL;
+    free(clave);
 }
-*/
+
+void fEliminarV(int *valor) {
+    valor = NULL;
+    free(valor);
+}
