@@ -150,7 +150,7 @@ void m_destruir(tMapeo * m, void (*fEliminarC)(void *), void (*fEliminarV)(void 
 **/
 tValor m_recuperar(tMapeo m, tClave c){
     int bucket = m->hash_code(c) % m->longitud_tabla;
-    tLista l = m->tabla_hash[bucket]; //directamente calculo el lugar y hago la lista
+    tLista l = m->tabla_hash[bucket];
     tValor recuperar = NULL;
     tPosicion posA, posF;
     tEntrada entrada;

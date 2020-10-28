@@ -9,6 +9,9 @@
 
 int fHash(void *p);
 int fComparacion(void *e1, void *e2);
+void readWord(char *w[]);
+
+
 
 int main(int argc, char *argv[]){
 tMapeo mapeo;
@@ -28,21 +31,20 @@ tMapeo mapeo;
         if(feof(archivo))
           printf("%s\n","Archivo vacio");
         else {//mapeo las palabras
-            printf("Entre a mapear \n");
-            tValor cant;
-            //char word[50];
+            //printf("Entre a mapear \n");
+            tValor cantWord;
             char *word;
             word = (char *) malloc(50*sizeof(char));
 
             while (fscanf(archivo, "%s", word) != EOF){
-                cant = m_recuperar(mapeo,word);
-                if(m_recuperar(mapeo, word) != NULL){
-                    cant++;
-                    m_insertar(mapeo,word,cant);
-                    //printf("sume a cantidad \n");
+                //printf("%s\n",word); //las lee perfecto
+                cantWord = m_recuperar(mapeo,word);
+                printf("%d",(tValor)cantWord);
+                if((cantWord) != NULL){
+                    cantWord++;
+                    m_insertar(mapeo,word,cantWord); //no actualiza el valor de cantWord
                 } else { //Si aun no se mapeo esa palabra
                     m_insertar(mapeo,word,(tValor) 1);
-                    //printf("inserte nueva palabra \n");
                 }
             //rewind(archivo);
             }
@@ -83,6 +85,12 @@ tMapeo mapeo;
     return 0;
 }
 
+/*
+    ###############################################
+     IMPLEMENTACION DE LAS INTERFACES DE FUNCIONES
+    ###############################################
+*/
+
 int fHash(void *p){
    return ((int)strlen(p));
 }
@@ -91,3 +99,18 @@ int fComparacion(void *e1, void *e2){
    return (strcmp(e1,e2));
    return (strcmp(e1,e2)==0);
 }
+
+/*
+void readWord(char *w[]){
+    char c;
+	int i=0;
+	while((c = fgetc(archivo)) != EOF) {
+		if(c == ' ' || c == '\n') {
+			w[i]=c;
+		}
+		i++;
+		//cada ves que lee una palabra termina recorriendo todo el archivo
+		//el orden del metodo se podria acotar por el tamaño de la palabra
+	}
+}
+*/

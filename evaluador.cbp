@@ -42,6 +42,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="mapeo.h" />
+		<Unit filename="test.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>
