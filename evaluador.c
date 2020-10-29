@@ -17,19 +17,20 @@ void sacarPunto(char word[]);
 int main(int argc, char *argv[]){
 tMapeo mapeo;
 FILE *archivo;
-  if(argc == 2){
-	char *nombre_archivo[20];
-	*nombre_archivo = argv[1];
+
+//analizar el archivo y mapearlo
+if(argc == 2){
+    char *nombre_archivo[20];
+    *nombre_archivo = argv[1];
     crear_mapeo(&mapeo,99,&fHash,&fComparacion);
 
     // Abro el archivo a leer
     if((archivo = fopen(*nombre_archivo,"r")) == NULL){
-		printf("%s\n","Archivo invalido");
-		return -1;
-
+        printf("%s\n","Archivo invalido");
+        return -1;
     } else {
         if(feof(archivo))
-          printf("%s\n","Archivo vacio");
+            printf("%s\n","Archivo vacio");
         else {//mapeo las palabras
             tValor cantWord;
             char *word;
@@ -38,10 +39,7 @@ FILE *archivo;
             while (fscanf(archivo, "%s", word) != EOF){
                 //sacarle el punto a la palabra
                 sacarPunto(word);
-
-                //printf("%s\n",word); //DEBUG
                 cantWord = m_recuperar(mapeo,word);
-                //printf("%p\n",(tValor)cantWord); //DEBUG
                 if((cantWord) != NULL){
                     cantWord++;
                     m_eliminar(mapeo,word,(void*)&fEliminarC, (void*)&fEliminarV);//elimino la entrada vieja
@@ -52,56 +50,56 @@ FILE *archivo;
             //rewind(archivo);
             }
         }
-      }
-  } else{
+    }
+} else{
         printf("%s\n","Error en el numero de argumentos");
-        return -2;
+    return -2;
     }
 
+// MENU DEL EVALUADOR
 
-    // MENU DEL EVALUADOR
-    int op;
-    int seguir = 1;
-    tValor cant;
-    char *wordMenu;
-    wordMenu = (char *) malloc(50*sizeof(char));
+int op;
+int seguir = 1;
+tValor cant;
+char *wordMenu;
+wordMenu = (char *) malloc(50*sizeof(char));
 
-    while(seguir){
-        printf("%s\n\n\n","---------------------Menu de opciones--------------------");
-        printf("%s\n\n","1. Cantidad de apariciones\n2. Salir");
-        scanf("%d",&op);
-        fflush(stdin);
+while(seguir){
+    printf("%s\n\n\n","---------------------Menu de opciones--------------------");
+    printf("%s\n\n","1. Cantidad de apariciones\n2. Salir");
+    scanf("%d",&op);
+    fflush(stdin);
 
-        switch(op){
-          case 1: {
-            printf("%s","---> Ingrese a una palabra: ");
-            scanf("%s",wordMenu);
-            printf("La palabra escrita es: %s\n",wordMenu);
-            printf("\n");
-            fflush(stdin);
+    switch(op){
+      case 1: {
+        printf("%s","---> Ingrese a una palabra: \n");
+        scanf("%s",wordMenu);
+        printf("La palabra escrita es: %s\n",wordMenu);
 
-            if(m_recuperar(mapeo,wordMenu)!=NULL){
-                cant =  m_recuperar(mapeo,wordMenu);
-                printf("cant: %d\n",(int)cant);
-            }else{
-                cant = 0;
-                printf("cant else: %d\n",(int)cant);
-            }
-
-            //printf("Cantidad de elementos del mapeo: %d\n",mapeo->cantidad_elementos);
+        cant =  m_recuperar(mapeo,wordMenu);
+        if(cant!=NULL){
+            printf("not NULL\n");
+            cant =  m_recuperar(mapeo,wordMenu);
             printf("*** La cantidad de veces que aparece la palabra es: %d\n\n\n",(int)cant);
-
-            break;
-          }
-          case 2:
-            printf("%s\n","---> Ha finalizado la ejecucion del programa");
-            m_destruir(&mapeo, (void*) &fEliminarC, (void*) &fEliminarV);
-            fclose(archivo);
-            seguir = 0;
+        }else{
+            printf("NULL\n");
+            cant = 0;
+            printf("*** La cantidad de veces que aparece la palabra es: %d\n\n\n",(int)cant);
         }
-      }
 
-    return 0;
+        //printf("Cantidad de elementos del mapeo: %d\n",mapeo->cantidad_elementos);
+        //printf("*** La cantidad de veces que aparece la palabra es: %d\n\n\n",(int)cant);
+        fflush(stdin);
+        break;
+      }
+      case 2:
+        printf("%s\n","---> Ha finalizado la ejecucion del programa");
+        m_destruir(&mapeo, (void*) &fEliminarC, (void*) &fEliminarV);
+        fclose(archivo);
+        seguir = 0;
+    }
+  }
+return 0;
 }
 
 /*
@@ -110,6 +108,11 @@ FILE *archivo;
     ###############################################
 */
 
+/**
+    Saca los puntos o comas que esten pegados a las palabras
+    Obs: no es la mejor forma porque por cada palabra del archivo vuelve a recorrer la misma palabra
+        por lo tanto tiene un tiempo O(n^2) poruqe termina viendo el archivo 2 veces en total.
+**/
 void sacarPunto(char word[]){
     char letra;
     for(int i=0; i<strlen(word);i++){
