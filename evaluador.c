@@ -12,7 +12,6 @@ int fHash(void *p);
 int fComparacion(void *e1, void *e2);
 void fEliminarC(char *clave);
 void fEliminarV(int *valor);
-void sacarPunto(char word[]);
 
 
 tMapeo mapeo;
@@ -34,27 +33,33 @@ if(argc == 2){
     } else {
         if(feof(archivo))
             printf("%s\n","Archivo vacio");
-        else {//mapeo las palabras
+        else {//mapeo las palabras (metodos sacados de internet)
 
-            //hacer por cada palabra nueva un malloc
-            //no hacer free, sino se borran las claves
-            char *word;
+            //strdup() duplica la cadena y hace malloc correctamente
+            //strtok() divide la cadena en palabras para interpretar una por una, la division la define fin[]
+            char *word, *cArchivo, *palabras;
             word = (char *) malloc(50*sizeof(char));
+            char fin[] = "\n. ";
+            char cadena[255];
             int cantWord;
+            //reservo lugar para cadenas desde el archivo que son inicializadas por fgets()
+            cArchivo = (char *)malloc(255*sizeof(char));
 
-            while (fscanf(archivo, "%s", word) != EOF){
-                //lee las palabras correctamente
-                //no las inserta como debe ser
-                sacarPunto(word);
-                cantWord = (int) m_recuperar(mapeo,word);
-                //printf("cantWord: %d\n",cantWord);
-                //desreferenciar el puntero y sumar
-                if((cantWord) != 0){
-                    cantWord = (int) m_recuperar(mapeo,word) + 1;
-                    m_insertar(mapeo,word,(tValor)cantWord);
-                } else {
-                    word = (char *) malloc(50*sizeof(char)); //reservar lugar para cada palabra nueva
-                    m_insertar(mapeo,word,(tValor) 1);
+            while(cArchivo != NULL) {
+                //fgets() toma la cadena de 99 caracteres del archivo
+                cArchivo = fgets(cadena, 100, archivo); //lee 99, porque lee el EOF o EOL
+                palabras = strtok(cArchivo, fin);
+                while(palabras != NULL){
+                    cantWord = (int) m_recuperar(mapeo, palabras) + 1;
+                    word = strdup(palabras);
+                    m_eliminar(mapeo,word,(void*)&fEliminarC,(void*)&fEliminarV);//funciona mal si borro esta linea
+                    m_insertar(mapeo, word, (tValor) cantWord);
+                    palabras = strtok(NULL, fin);
+                    /*
+                        Poniendo de primer parametro NULL hacemos que corte el ciclo porque no tiene mas cadena para dividir
+                            por lo tanto al terminar con una palabra termina y vuelve a buscar otra.
+                        El metodo destruye el primer parametro por lo tanto no vuelve a leer la misma palabra
+                     */
                 }
             }
         }
@@ -62,7 +67,7 @@ if(argc == 2){
 } else{
     printf("%s\n","Error en el numero de argumentos");
     return -2;
-}
+  }
 
 
 // MENU DEL EVALUADOR
@@ -86,11 +91,9 @@ while(seguir){
 
         cant = m_recuperar(mapeo,wordMenu);
         if(cant!=0){
-            printf("not NULL\n");
             cant = m_recuperar(mapeo,wordMenu);
             printf("*** La cantidad de veces que aparece la palabra es: %d\n\n\n",(int)cant);
         }else{
-            printf("NULL\n");
             cant = 0;
             printf("*** La cantidad de veces que aparece la palabra es: %d\n\n\n",(int)cant);
         }
@@ -113,20 +116,6 @@ return 0;
     ###############################################
 */
 
-/**
-    Saca los puntos o comas que esten pegados a las palabras
-    Obs: no es la mejor forma porque por cada palabra del archivo vuelve a recorrer la misma palabra
-        por lo tanto tiene un tiempo O(n^2) poruqe termina viendo el archivo 2 veces en total.
-**/
-void sacarPunto(char word[]){
-    char letra;
-    for(int i=0; i<strlen(word);i++){
-        letra = word[i];
-        if(letra == '.' && letra==','){
-            word[i]='\0';
-        }
-    }
-}
 
 int fHash(void *p){
     char* word = p;
