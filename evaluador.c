@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "mapeo.c"
+#include "mapeo.h"
 
 #define OPEN_FILE_ERROR -1
 #define PROG_INIT_ERROR -2
@@ -14,9 +14,12 @@ void fEliminarC(char *clave);
 void fEliminarV(int *valor);
 void sacarPunto(char word[]);
 
-int main(int argc, char *argv[]){
+
 tMapeo mapeo;
 FILE *archivo;
+
+
+int main(int argc, char *argv[]){
 
 //analizar el archivo y mapearlo
 if(argc == 2){
@@ -32,29 +35,35 @@ if(argc == 2){
         if(feof(archivo))
             printf("%s\n","Archivo vacio");
         else {//mapeo las palabras
-            tValor cantWord;
+
+            //hacer por cada palabra nueva un malloc
+            //no hacer free, sino se borran las claves
             char *word;
             word = (char *) malloc(50*sizeof(char));
+            int cantWord;
 
             while (fscanf(archivo, "%s", word) != EOF){
-                //sacarle el punto a la palabra
+                //lee las palabras correctamente
+                //no las inserta como debe ser
                 sacarPunto(word);
-                cantWord = m_recuperar(mapeo,word);
-                if((cantWord) != NULL){
-                    cantWord++;
-                    m_eliminar(mapeo,word,(void*)&fEliminarC, (void*)&fEliminarV);//elimino la entrada vieja
-                    m_insertar(mapeo,word,cantWord);
+                cantWord = (int) m_recuperar(mapeo,word);
+                //printf("cantWord: %d\n",cantWord);
+                //desreferenciar el puntero y sumar
+                if((cantWord) != 0){
+                    cantWord = (int) m_recuperar(mapeo,word) + 1;
+                    m_insertar(mapeo,word,(tValor)cantWord);
                 } else {
+                    word = (char *) malloc(50*sizeof(char)); //reservar lugar para cada palabra nueva
                     m_insertar(mapeo,word,(tValor) 1);
                 }
-            //rewind(archivo);
             }
         }
     }
 } else{
-        printf("%s\n","Error en el numero de argumentos");
+    printf("%s\n","Error en el numero de argumentos");
     return -2;
-    }
+}
+
 
 // MENU DEL EVALUADOR
 
@@ -73,22 +82,18 @@ while(seguir){
     switch(op){
       case 1: {
         printf("%s","---> Ingrese a una palabra: \n");
-        scanf("%s",wordMenu);
-        printf("La palabra escrita es: %s\n",wordMenu);
+        scanf("%s",(char*)wordMenu);
 
-        cant =  m_recuperar(mapeo,wordMenu);
-        if(cant!=NULL){
+        cant = m_recuperar(mapeo,wordMenu);
+        if(cant!=0){
             printf("not NULL\n");
-            cant =  m_recuperar(mapeo,wordMenu);
+            cant = m_recuperar(mapeo,wordMenu);
             printf("*** La cantidad de veces que aparece la palabra es: %d\n\n\n",(int)cant);
         }else{
             printf("NULL\n");
             cant = 0;
             printf("*** La cantidad de veces que aparece la palabra es: %d\n\n\n",(int)cant);
         }
-
-        //printf("Cantidad de elementos del mapeo: %d\n",mapeo->cantidad_elementos);
-        //printf("*** La cantidad de veces que aparece la palabra es: %d\n\n\n",(int)cant);
         fflush(stdin);
         break;
       }

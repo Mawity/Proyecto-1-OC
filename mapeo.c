@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "lista.c"
+#include "lista.h"
 #include "mapeo.h"
 
 #define max(a,b)    (((a) > (b)) ? (a) : (b))
@@ -138,7 +138,6 @@ void m_destruir(tMapeo * m, void (*fEliminarC)(void *), void (*fEliminarV)(void 
         l_destruir(&((*m)->tabla_hash[i]), &fEliminarEntrada);
         free(liberar); //libero un bucket
     }
-
     //se libera el mapeo
     free(m);
     (*m) = NULL;
