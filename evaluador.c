@@ -44,7 +44,7 @@ FILE *archivo;
                 //printf("%p\n",(tValor)cantWord); //DEBUG
                 if((cantWord) != NULL){
                     cantWord++;
-                    m_eliminar(mapeo,word,(void*)&fEliminarC, (void*)&fEliminarV);
+                    m_eliminar(mapeo,word,(void*)&fEliminarC, (void*)&fEliminarV);//elimino la entrada vieja
                     m_insertar(mapeo,word,cantWord);
                 } else {
                     m_insertar(mapeo,word,(tValor) 1);
@@ -53,14 +53,19 @@ FILE *archivo;
             }
         }
       }
-    } else
+  } else{
         printf("%s\n","Error en el numero de argumentos");
+        return -2;
+    }
 
 
     // MENU DEL EVALUADOR
     int op;
     int seguir = 1;
-    char word[15];
+    tValor cant;
+    char *wordMenu;
+    wordMenu = (char *) malloc(50*sizeof(char));
+
     while(seguir){
         printf("%s\n\n\n","---------------------Menu de opciones--------------------");
         printf("%s\n\n","1. Cantidad de apariciones\n2. Salir");
@@ -70,11 +75,22 @@ FILE *archivo;
         switch(op){
           case 1: {
             printf("%s","---> Ingrese a una palabra: ");
-            scanf("%s",word);
+            scanf("%s",wordMenu);
+            printf("La palabra escrita es: %s\n",wordMenu);
             printf("\n");
             fflush(stdin);
-            tValor cant = m_recuperar(mapeo,word);
-            printf("*** La cantidad de veces que aparece la palabra es: %p\n\n\n",cant);
+
+            if(m_recuperar(mapeo,wordMenu)!=NULL){
+                cant =  m_recuperar(mapeo,wordMenu);
+                printf("cant: %d\n",(int)cant);
+            }else{
+                cant = 0;
+                printf("cant else: %d\n",(int)cant);
+            }
+
+            //printf("Cantidad de elementos del mapeo: %d\n",mapeo->cantidad_elementos);
+            printf("*** La cantidad de veces que aparece la palabra es: %d\n\n\n",(int)cant);
+
             break;
           }
           case 2:
@@ -98,11 +114,10 @@ void sacarPunto(char word[]){
     char letra;
     for(int i=0; i<strlen(word);i++){
         letra = word[i];
-        if(letra == '.'){
+        if(letra == '.' && letra==','){
             word[i]='\0';
         }
     }
-    //printf("Palabra sin el punto:%s\n",word);
 }
 
 int fHash(void *p){
@@ -113,7 +128,6 @@ int fHash(void *p){
         hash = 31 * hash + word[i];
         i++;
     }
-
     return abs(hash);
 }
 
