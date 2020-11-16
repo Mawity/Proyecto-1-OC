@@ -6,12 +6,13 @@
 
 #define OPEN_FILE_ERROR -1
 #define PROG_INIT_ERROR -2
+#define MEMORY_ALLOC_ERROR -3
 
 // Interfaz de funciones
 int fHash(void *p);
 int fComparacion(void *e1, void *e2);
-void fEliminarC(char *clave);
-void fEliminarV(int *valor);
+void fEliminarC(void *clave);
+void fEliminarV(void *valor);
 
 
 tMapeo mapeo;
@@ -22,46 +23,58 @@ int main(int argc, char *argv[]){
 
 //analizar el archivo y mapearlo
 if(argc == 2){
-    char *nombre_archivo[20];
-    *nombre_archivo = argv[1];
-    crear_mapeo(&mapeo,99,&fHash,&fComparacion);
+    char *nombre_archivo[32]; //el nombre del archvo tiene que ser menor a 32 caract
+    *nombre_archivo = argv[1]; //lo hago asi para no hardcodear el codigo asignando a argv[1]="file.txt"
+    crear_mapeo(&mapeo,50,&fHash,&fComparacion);
 
     // Abro el archivo a leer
-    if((archivo = fopen(*nombre_archivo,"r")) == NULL){
+    archivo = fopen(*nombre_archivo,"r");
+    if(archivo == NULL){
         printf("%s\n","Archivo invalido");
-        return -1;
+        exit(OPEN_FILE_ERROR);
     } else {
         if(feof(archivo))
             printf("%s\n","Archivo vacio");
-        else {//mapeo las palabras (metodos sacados de internet)
+        else {//mapeo las palabras
 
             //strdup() duplica la cadena y hace malloc correctamente
             //strtok() divide la cadena en palabras para interpretar una por una, la division la define fin[]
-            char *word, *cArchivo, *palabras;
-            word = (char *) malloc(50*sizeof(char));
+            int *cantWord;
+            int *nuevaEntrada;
             char fin[] = "\n. ";
             char cadena[255];
-            int cantWord;
-            //reservo lugar para cadenas desde el archivo que son inicializadas por fgets()
-            cArchivo = (char *)malloc(255*sizeof(char));
+            char *word, *palabras;
 
-            while(cArchivo != NULL) {
-                //fgets() toma la cadena de 99 caracteres del archivo
-                cArchivo = fgets(cadena, 100, archivo); //lee 99, porque lee el EOF o EOL
-                palabras = strtok(cArchivo, fin);
+            while(!feof(archivo)) {
+                fgets(cadena, 100, archivo);
+                palabras = strtok(cadena, fin);
+
                 while(palabras != NULL){
-                    cantWord = (int) m_recuperar(mapeo, palabras) + 1;
                     word = strdup(palabras);
-                    m_eliminar(mapeo,word,(void*)&fEliminarC,(void*)&fEliminarV);//funciona mal si borro esta linea
-                    m_insertar(mapeo, word, (tValor) cantWord);
+                    if(word==NULL){ exit(MEMORY_ALLOC_ERROR); }
+
+                    cantWord = m_recuperar(mapeo, palabras);
+
+                    if(cantWord==NULL){
+                        nuevaEntrada = malloc(sizeof(int));
+                        if(nuevaEntrada == NULL){
+                            exit(MEMORY_ALLOC_ERROR);
+                        }
+                        *nuevaEntrada = 1;
+                        m_insertar(mapeo, word, nuevaEntrada);
+                    }else{
+                        free(word);
+                        *cantWord = *(cantWord) + 1;
+                    }
+
                     palabras = strtok(NULL, fin);
-                    /*
-                        Poniendo de primer parametro NULL hacemos que corte el ciclo porque no tiene mas cadena para dividir
+                    /*  Poniendo de primer parametro NULL hacemos que corte el ciclo porque no tiene mas cadena para dividir
                             por lo tanto al terminar con una palabra termina y vuelve a buscar otra.
                         El metodo destruye el primer parametro por lo tanto no vuelve a leer la misma palabra
                      */
                 }
             }
+            fclose(archivo);
         }
     }
 } else{
@@ -75,8 +88,9 @@ if(argc == 2){
 int op;
 int seguir = 1;
 tValor cant;
+int cantApariciones = 0;//valor entero de la cantidad de veces que aparece la palabra
 char *wordMenu;
-wordMenu = (char *) malloc(50*sizeof(char));
+wordMenu = (char *) malloc(32*sizeof(char));
 
 while(seguir){
     printf("%s\n\n\n","---------------------Menu de opciones--------------------");
@@ -88,23 +102,21 @@ while(seguir){
       case 1: {
         printf("%s","---> Ingrese a una palabra: \n");
         scanf("%s",(char*)wordMenu);
-
-        cant = m_recuperar(mapeo,wordMenu);
-        if(cant!=0){
-            cant = m_recuperar(mapeo,wordMenu);
-            printf("*** La cantidad de veces que aparece la palabra es: %d\n\n\n",(int)cant);
-        }else{
-            cant = 0;
-            printf("*** La cantidad de veces que aparece la palabra es: %d\n\n\n",(int)cant);
-        }
         fflush(stdin);
+        cant = m_recuperar(mapeo,wordMenu);
+        if(cant!=NULL){
+            cantApariciones = *((int*) cant);
+        }//transformo el tValor "cant" a valor entero "cantApariciones"
+
+        printf("*** La cantidad de veces que aparece la palabra es: %d\n\n\n",cantApariciones);
         break;
       }
       case 2:
         printf("%s\n","---> Ha finalizado la ejecucion del programa");
-        m_destruir(&mapeo, (void*) &fEliminarC, (void*) &fEliminarV);
+        m_destruir(&mapeo, &fEliminarC, &fEliminarV);
         fclose(archivo);
         seguir = 0;
+        break;
     }
   }
 return 0;
@@ -116,7 +128,10 @@ return 0;
     ###############################################
 */
 
-
+/*  Funcion Hash, fuentes:
+    1) http://www.cse.yorku.ca/~oz/hash.html
+    2) https://stackoverflow.com/questions/7666509/hash-function-for-string
+*/
 int fHash(void *p){
     char* word = p;
     int hash = 0;
@@ -129,16 +144,16 @@ int fHash(void *p){
 }
 
 int fComparacion(void *e1, void *e2){
-   return (strcmp(e1,e2));
-   return (strcmp(e1,e2)==0);
+   return (strcmp((char*)e1,(char*)e2));
+   return (strcmp((char*)e1,(char*)e2)==0);
 }
 
-void fEliminarC(char *clave) {
-    clave = NULL;
+void fEliminarC(void *clave) {
     free(clave);
+    clave = NULL;
 }
 
-void fEliminarV(int *valor) {
-    valor = NULL;
+void fEliminarV(void *valor) {
     free(valor);
+    valor = NULL;
 }

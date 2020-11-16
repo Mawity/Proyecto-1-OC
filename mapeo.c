@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "lista.h"
 #include "mapeo.h"
 
 #define max(a,b)    (((a) > (b)) ? (a) : (b))
@@ -29,6 +28,9 @@ void crear_mapeo(tMapeo * m, int ci, int (*fHash)(void *), int (*fComparacion)(v
         exit (MAP_ERROR_MEMORIA);
     }else{
         tLista * lista = (tLista*) malloc(sizeof(tLista) * cantInicial);
+        if (lista == NULL){
+            exit(MAP_ERROR_MEMORIA);
+        }
         //Inicializacion de las listas en cada bucket de la tabla
         for (int i=0; i < cantInicial; i++){
             crear_lista(&lista[i]);
@@ -55,7 +57,8 @@ tValor m_insertar(tMapeo m, tClave c, tValor v){
         tLista l;
         tPosicion posA, posF;
         tEntrada entrada,nueva;
-        tValor vi = NULL;
+        tValor vi = NULL; // valor final para retornar
+        tClave *clave;
         int encontre = 0; //bool
         int bucket = m->hash_code(c) % m->longitud_tabla; //valor de la clave C
 
@@ -66,25 +69,30 @@ tValor m_insertar(tMapeo m, tClave c, tValor v){
         //Recorre el bucket para encontrar la palabra repetida
         while (posA != posF && !encontre) {
             entrada = (tEntrada) l_recuperar(l,posA);
-            tClave *clave = entrada->clave;
-            if(m->comparador(clave,c) != 0){
+            clave = entrada->clave;
+            if(m->comparador(clave,c) == 0){
                 encontre = 1; //La encontro!
-                vi = (tValor) entrada->valor; //valor a retornar
+                vi = entrada->valor; //valor a retornar
                 entrada->valor = v; //Modifica el valor de la entrada
             }else{
                 posA = l_siguiente(l,posA); //sigue buscando
             }
         }
         if(!encontre){ //agregar al mapeo nueva entrada
-            if(((m->cantidad_elementos +1) / (m->longitud_tabla)) >= FC){ //factor de carga superado
-                reHash(m);
-            }
+
             //Como la entrada no existe se crea un lugar para ella y se inserta
             nueva = (tEntrada) malloc(sizeof(struct entrada));
+            if(nueva == NULL){
+                exit(MAP_ERROR_MEMORIA);
+            }
             nueva->clave = c;
             nueva->valor = v;
             l_insertar(l,posA,nueva);
             m->cantidad_elementos++;
+
+            if((float)(m->cantidad_elementos+1) / (float)(m->longitud_tabla) >= FC){ //factor de carga superado
+                reHash(m);
+            }
         }
         return vi;
     }
@@ -115,6 +123,9 @@ void m_eliminar(tMapeo m, tClave c, void (*fEliminarC)(void *), void (*fEliminar
             if (m->comparador(c, entrada->clave) == 0){ //Lo encontro!
                 eliminado = 1;
                 l_eliminar(bucket, posA, &fEliminarEntrada);
+                entrada->clave = NULL;
+                entrada->valor = NULL;
+                m->cantidad_elementos--;
             }
             else
                 posA = l_siguiente(bucket, posA); //continua recorriendo
@@ -134,12 +145,14 @@ void m_destruir(tMapeo * m, void (*fEliminarC)(void *), void (*fEliminarV)(void 
 
     //en todas las posiciones de la pabla de eliminan los buckets
     for (int i=0; i < cant; i++){
-        tLista liberar = (*m)->tabla_hash[i];
         l_destruir(&((*m)->tabla_hash[i]), &fEliminarEntrada);
-        free(liberar); //libero un bucket
     }
     //se libera el mapeo
-    free(m);
+    (*m)->hash_code = NULL;
+    free((*m)->tabla_hash);
+    (*m)->tabla_hash = NULL;
+    (*m)->comparador = NULL;
+    free(*m);
     (*m) = NULL;
 }
 
@@ -185,40 +198,46 @@ tValor m_recuperar(tMapeo m, tClave c){
         -Duplica el tamaño de la tabla hash.
         -Vuelve a calular la funcion hash para reacomodar todos los elementos correctamente.
 **/
+void fEliminarNada(){} //Se utiliza en el reHash para no eliminar nada solo para completar un parametro de un metodo
 void reHash(tMapeo m){
+    int viejaLong = m->longitud_tabla;
+    int nuevaLong = (int) 2 * m->longitud_tabla; //duplica el tamaño de la tabla
+    int numBucket;
     tEntrada entrada;
     tPosicion posA,posF; //se inicializan luego
-    int viejaLong = m->longitud_tabla;
-    int nuevaLong = 2 * m->longitud_tabla; //duplica el tamaño de la tabla
-    tLista *lista = malloc(sizeof(tLista) * nuevaLong);
+    tLista bucket;
+    tLista *lista = malloc(sizeof(tLista) * (nuevaLong));
+
+    if(lista==NULL){
+       exit(MAP_ERROR_MEMORIA);
+    }
 
     //crea todos los nuevos buckets
 	for (int i=0; i < nuevaLong; i++){
-        crear_lista(lista + i);
+        crear_lista(&lista[i]);
 	}
 
     for(int i = 0; i<viejaLong;i++){ // recorro los bucket a copiar
         // primera y ultima pos del bucket
-        tLista bucket = m->tabla_hash[i];
+        bucket = m->tabla_hash[i];
         posA = l_primera(bucket);
         posF = l_fin(bucket);
 
         // vuelve a llenar cada lista en la nueva tabla
         while (posA != posF) {
-            entrada = (tEntrada) l_recuperar(m->tabla_hash[i],posA);
-            int bucketActual = m->hash_code(entrada->clave) % m->longitud_tabla;
-            l_insertar(lista[bucketActual], l_fin(*lista), entrada);
-            posA = l_siguiente(*lista, posA);
+            entrada = (tEntrada) l_recuperar(bucket,posA);
+            numBucket = (m->hash_code(entrada->clave)) % nuevaLong;
+            l_insertar(lista[numBucket], l_primera(lista[numBucket]), entrada);
+            posA = l_siguiente(bucket, posA);
         }
-        bucket->siguiente = NULL;
-        bucket->elemento = NULL;
-        bucket = NULL;
-        free(bucket);
+        l_destruir(&bucket, fEliminarNada);
     }
+
     //actualizo valores
+    m->longitud_tabla = nuevaLong;
+    free(m->tabla_hash);
     (m)->tabla_hash = lista;
 }
-
 /**
       Funcion que elimina y libera el espacio de una entrada
 **/
@@ -229,4 +248,3 @@ void fEliminarEntrada(tElemento e){
     free(entrada);
     entrada = NULL;
 }
-
